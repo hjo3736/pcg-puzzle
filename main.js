@@ -108,19 +108,6 @@ function drawBoard() {
 
       boardCtx.fillRect(px + 2, py + 2, tileSize - 4, tileSize - 4);
 
-      // room 번호
-      if (tile.roomID !== -1) {
-        boardCtx.fillStyle = '#fff';
-        boardCtx.font = '12px monospace';
-        boardCtx.textAlign = 'center';
-        boardCtx.textBaseline = 'middle';
-        boardCtx.fillText(
-          tile.roomID.toString(),
-          px + tileSize / 2,
-          py + tileSize / 2
-        );
-      }
-
       // 문(doors)
       if (tile.doors) {
         boardCtx.strokeStyle = '#f1c40f';
@@ -187,17 +174,6 @@ function drawPiecesList() {
     // 조각
     piecesCtx.fillStyle = '#2980b9';
     piecesCtx.fillRect(px + 2, py + 2, pieceTileSize - 4, pieceTileSize - 4);
-
-    // 번호
-    piecesCtx.fillStyle = '#fff';
-    piecesCtx.font = '12px monospace';
-    piecesCtx.textAlign = 'center';
-    piecesCtx.textBaseline = 'middle';
-    piecesCtx.fillText(
-      piece.roomID.toString(),
-      px + pieceTileSize / 2,
-      py + pieceTileSize / 2
-    );
 
     // 문(doors)
     if (piece.doors) {
