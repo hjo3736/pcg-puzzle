@@ -50,13 +50,11 @@ function initGame() {
   dragState.from = null;
   dragState.piece = null;
 
-  // 보드 캔버스 크기
   boardCanvas.width = N * tileSize;
   boardCanvas.height = M * tileSize;
 
-  // 조각 캔버스 (두 줄 정도)
   piecesCanvas.width = N * tileSize;
-  piecesCanvas.height = pieceTileSize * 2;
+  resizePiecesCanvas();
 
   updatePiecesInfo();
   drawBoard();
@@ -65,9 +63,19 @@ function initGame() {
 
 function updatePiecesInfo() {
   piecesInfo.textContent = `Tiles left: ${pieces.length}`;
+  resizePiecesCanvas();
 }
 
-// === 보드 그리기 ===
+function resizePiecesCanvas() {
+  if (!pieces) return;
+
+  const width = piecesCanvas.width;
+  const perRow = Math.max(1, Math.floor(width / pieceTileSize));
+
+  const rows = Math.max(1, Math.ceil(pieces.length / perRow));
+  piecesCanvas.height = rows * pieceTileSize;
+}
+
 function drawBoard() {
   if (!board) return;
 
@@ -82,33 +90,28 @@ function drawBoard() {
       const px = y * tileSize;
       const py = x * tileSize;
 
-      // 바탕
       boardCtx.fillStyle = '#222';
       boardCtx.fillRect(px, py, tileSize, tileSize);
 
       if (!tile) {
-        // 완전 빈 슬롯 (null)
         boardCtx.strokeStyle = '#444';
         boardCtx.lineWidth = 1;
         boardCtx.strokeRect(px, py, tileSize, tileSize);
         continue;
       }
 
-      // 타입별 색상
       if (tile.type === 'start') {
-        boardCtx.fillStyle = '#2ecc71';    // 초록
+        boardCtx.fillStyle = '#2ecc71';
       } else if (tile.type === 'goal') {
-        boardCtx.fillStyle = '#e74c3c';    // 빨강
+        boardCtx.fillStyle = '#e74c3c';
       } else if (tile.type === 'hidden') {
-        boardCtx.fillStyle = '#9b59b6';    // 보라
+        boardCtx.fillStyle = '#9b59b6';
       } else if (tile.roomID !== -1) {
-        // room: fixed / movable 구분
         boardCtx.fillStyle = tile.isFixed ? '#95a5a6' : '#3498db';
       }
 
       boardCtx.fillRect(px + 2, py + 2, tileSize - 4, tileSize - 4);
 
-      // 문(doors)
       if (tile.doors) {
         boardCtx.strokeStyle = '#f1c40f';
         boardCtx.lineWidth = 2;
@@ -135,7 +138,6 @@ function drawBoard() {
         boardCtx.stroke();
       }
 
-      // 고정 타일 테두리
       if (tile.isFixed) {
         boardCtx.strokeStyle = '#f39c12';
         boardCtx.lineWidth = 2;
@@ -148,11 +150,9 @@ function drawBoard() {
     }
   }
 
-  // 드래그 중이면 고스트(미리보기) 그리기
   drawDraggingGhostOnBoard();
 }
 
-// === 조각 리스트 그리기 ===
 function drawPiecesList() {
   piecesCtx.clearRect(0, 0, piecesCanvas.width, piecesCanvas.height);
 
@@ -167,15 +167,12 @@ function drawPiecesList() {
     const px = col * pieceTileSize;
     const py = row * pieceTileSize;
 
-    // 배경
     piecesCtx.fillStyle = '#111';
     piecesCtx.fillRect(px, py, pieceTileSize, pieceTileSize);
 
-    // 조각
     piecesCtx.fillStyle = '#2980b9';
     piecesCtx.fillRect(px + 2, py + 2, pieceTileSize - 4, pieceTileSize - 4);
 
-    // 문(doors)
     if (piece.doors) {
       piecesCtx.strokeStyle = '#f1c40f';
       piecesCtx.lineWidth = 2;
@@ -202,7 +199,6 @@ function drawPiecesList() {
       piecesCtx.stroke();
     }
 
-    // 선택 / 드래그중 강조
     if (i === selectedPieceIndex || (dragState.active && dragState.from === 'pieces' && dragState.pieceIndex === i)) {
       piecesCtx.strokeStyle = '#e67e22';
       piecesCtx.lineWidth = 3;
@@ -215,7 +211,6 @@ function drawPiecesList() {
   });
 }
 
-// === 드래그 고스트 (보드 위에 미리보기) ===
 function drawDraggingGhostOnBoard() {
   if (!dragState.active) return;
   if (dragState.over !== 'board') return;
@@ -229,7 +224,6 @@ function drawDraggingGhostOnBoard() {
   boardCtx.save();
   boardCtx.globalAlpha = 0.6;
 
-  // 바디
   boardCtx.fillStyle =
     piece.type === 'start' ? '#2ecc71' :
     piece.type === 'goal' ? '#e74c3c' :
@@ -238,20 +232,6 @@ function drawDraggingGhostOnBoard() {
 
   boardCtx.fillRect(px + 2, py + 2, tileSize - 4, tileSize - 4);
 
-  // 번호
-  if (piece.roomID !== -1) {
-    boardCtx.fillStyle = '#fff';
-    boardCtx.font = '12px monospace';
-    boardCtx.textAlign = 'center';
-    boardCtx.textBaseline = 'middle';
-    boardCtx.fillText(
-      piece.roomID.toString(),
-      px + tileSize / 2,
-      py + tileSize / 2
-    );
-  }
-
-  // 문
   if (piece.doors) {
     boardCtx.strokeStyle = '#f1c40f';
     boardCtx.lineWidth = 2;
@@ -281,7 +261,6 @@ function drawDraggingGhostOnBoard() {
   boardCtx.restore();
 }
 
-// === 드래그 시작: 조각 리스트에서 ===
 piecesCanvas.addEventListener('mousedown', (e) => {
   if (!pieces || pieces.length === 0) return;
 
@@ -314,7 +293,6 @@ piecesCanvas.addEventListener('mousedown', (e) => {
   drawPiecesList();
 });
 
-// === 드래그 시작: 보드에서 (이미 놓인 조각 이동) ===
 boardCanvas.addEventListener('mousedown', (e) => {
   if (!board) return;
 
@@ -322,8 +300,8 @@ boardCanvas.addEventListener('mousedown', (e) => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
 
-  const tileY = Math.floor(mx / tileSize); // col
-  const tileX = Math.floor(my / tileSize); // row
+  const tileY = Math.floor(mx / tileSize);
+  const tileX = Math.floor(my / tileSize);
 
   const M = board.length;
   const N = board[0].length;
@@ -332,7 +310,6 @@ boardCanvas.addEventListener('mousedown', (e) => {
 
   const tile = board[tileX][tileY];
 
-  // fixed거나 빈 공간(roomID === -1)인 타일은 못 움직임
   if (!tile || tile.isFixed || tile.roomID === -1) return;
 
   dragState.active = true;
@@ -347,17 +324,49 @@ boardCanvas.addEventListener('mousedown', (e) => {
   dragState.overX = mx;
   dragState.overY = my;
 
-  // 드래그 동안은 원래 자리 비워둠
   board[tileX][tileY] = null;
 
   drawBoard();
 });
 
-// === 드래그 이동 (전역) ===
+boardCanvas.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (!board) return;
+
+  const rect = boardCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  const tileY = Math.floor(mx / tileSize);
+  const tileX = Math.floor(my / tileSize);
+
+  const M = board.length;
+  const N = board[0].length;
+
+  if (tileX < 0 || tileX >= M || tileY < 0 || tileY >= N) return;
+
+  const tile = board[tileX][tileY];
+
+  if (!tile || tile.isFixed || tile.roomID === -1) return;
+
+  pieces.push({
+    ...tile,
+    x: null,
+    y: null,
+    isFixed: false,
+  });
+
+  // 보드에서 제거
+  board[tileX][tileY] = null;
+
+  updatePiecesInfo();
+  drawBoard();
+  drawPiecesList();
+});
+
 window.addEventListener('mousemove', (e) => {
   if (!dragState.active) return;
 
-  // 보드 내부인지 체크
   const boardRect = boardCanvas.getBoundingClientRect();
   if (
     e.clientX >= boardRect.left &&
@@ -372,7 +381,6 @@ window.addEventListener('mousemove', (e) => {
     return;
   }
 
-  // 조각 영역 내부인지 체크
   const piecesRect = piecesCanvas.getBoundingClientRect();
   if (
     e.clientX >= piecesRect.left &&
@@ -388,11 +396,9 @@ window.addEventListener('mousemove', (e) => {
     return;
   }
 
-  // 어느 캔버스에도 없음
   dragState.over = null;
 });
 
-// === 드래그 끝 (전역) ===
 window.addEventListener('mouseup', (e) => {
   if (!dragState.active) return;
 
@@ -404,7 +410,6 @@ window.addEventListener('mouseup', (e) => {
 
   let placed = false;
 
-  // 1) 보드 위에서 놓으려고 한 경우
   const boardRect = boardCanvas.getBoundingClientRect();
   if (
     e.clientX >= boardRect.left &&
@@ -423,22 +428,12 @@ window.addEventListener('mouseup', (e) => {
     if (tileX >= 0 && tileX < M && tileY >= 0 && tileY < N) {
       const target = board[tileX][tileY];
 
-      // 고정 타일 위에는 못 놓음
       if (target && target.isFixed) {
-        // 실패 → 아래에서 롤백
       }
-      // 이미 다른 '방 조각'(movable room)이 있는 칸에도 못 놓게 막기
       else if (target && !target.isFixed && target.roomID !== -1) {
-        // 실패 → 아래에서 롤백
       }
       else {
-        // 여기서는 target 이
-        // 1) null 이거나
-        // 2) roomID === -1 (빈 공간 타일)
-        // 인 경우만 옴
-
         if (from === 'pieces') {
-          // 조각 리스트에서 가져온 경우: 문 일관성 검사 O
           const oldTile = target || null;
 
           const placedTile = {
@@ -455,11 +450,9 @@ window.addEventListener('mouseup', (e) => {
               pieces.splice(pieceIndex, 1);
             }
           } else {
-            // 실패 → 롤백
             board[tileX][tileY] = oldTile;
           }
         } else if (from === 'board') {
-          // 보드에서 끌어온 경우: 문 검증 없이 이동 허용
           const placedTile = {
             ...piece,
             x: tileX,
@@ -473,18 +466,14 @@ window.addEventListener('mouseup', (e) => {
     }
   }
 
-  // 2) 보드 위에 제대로 못 놓았거나 / 캔버스 밖에 놓은 경우
   if (!placed) {
     if (from === 'board' && fromX !== null && fromY !== null) {
-      // 원래 보드에서 끌어온 조각이면 원 위치 복구
       if (!board[fromX][fromY]) {
         board[fromX][fromY] = piece;
       }
     }
-    // from === 'pieces' 인 경우에는 pieces 배열 그대로라서 추가 조치 필요 없음
   }
 
-  // 드래그 상태 초기화
   dragState.active = false;
   dragState.from = null;
   dragState.piece = null;
@@ -500,7 +489,6 @@ window.addEventListener('mouseup', (e) => {
   drawPiecesList();
 });
 
-// === 버튼 ===
 regenBtn.addEventListener('click', () => {
   initGame();
 });
@@ -508,13 +496,12 @@ regenBtn.addEventListener('click', () => {
 checkBtn.addEventListener('click', () => {
   const solved = isPuzzleSolved(board, pieces.length);
   if (solved) {
-    alert('🎉 퍼즐 완성!');
+    alert('Correct!!!');
   } else {
-    alert('아직 정답이 아니야!');
+    alert('Not Yet Correct!');
   }
 });
 
-// === 플레이 방법 모달 ===
 helpBtn.addEventListener('click', () => {
   helpModal.classList.remove('hidden');
 });
@@ -529,5 +516,4 @@ helpModal.addEventListener('click', (e) => {
   }
 });
 
-// 시작
 initGame();

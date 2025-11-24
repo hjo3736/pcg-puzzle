@@ -167,11 +167,21 @@ function settingRooms(gameMap, M, N){
     hiddenRooms.forEach(h => h.isFixed = true);
 
     // Leaf Tile
-    leafRooms.forEach(r => {
-        if (r.type !== 'goal' && r.type !== 'start')
-            r.isFixed = true;
-    });
+    let leafCandidates = leafRooms.filter(r =>
+    r.type !== 'goal' && r.type !== 'start'
+    );
 
+    // Random shuffle
+    for (let i = leafCandidates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [leafCandidates[i], leafCandidates[j]] = [leafCandidates[j], leafCandidates[i]];
+    }
+
+    // Fix only half of them
+    const half = Math.floor(leafCandidates.length / 2);
+    leafCandidates.forEach((room, idx) => {
+        room.isFixed = idx < half;
+    })
 }
 
 function computeDistancesFromStart(gameMap, M, N, startTile) {
