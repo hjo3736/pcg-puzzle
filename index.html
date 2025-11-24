@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>PCG Puzzle</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    #gameCanvas {
+      border: 1px solid #666;
+      background: #222;
+      display: block;
+    }
+
+    #piecesCanvas {
+      border: 1px solid #555;
+      background: #181818;
+      display: block;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #555;
+      background: #333;
+      color: #eee;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    #piecesInfo {
+      font-size: 14px;
+    }
+
+    /* --- 모달 스타일 --- */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .modal-content {
+      background: #222;
+      border-radius: 8px;
+      padding: 16px 20px;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+      border: 1px solid #555;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .modal-content h3 {
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    .modal-content p,
+    .modal-content li {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .modal-close {
+      float: right;
+      font-size: 20px;
+      cursor: pointer;
+      color: #bbb;
+      margin-left: 8px;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>PCG Puzzle</h1>
+
+  <div class="controls">
+    <label>
+      M:
+      <input type="number" id="inputM" value="10" min="3" max="50" style="width:60px;">
+    </label>
+    <label>
+      N:
+      <input type="number" id="inputN" value="10" min="3" max="50" style="width:60px;">
+    </label>
+    <label>
+      Rooms:
+      <input type="number" id="inputRooms" value="20" min="1" max="200" style="width:80px;">
+    </label>
+    <button id="regenBtn">Regenerate Map</button>
+    <button id="checkBtn">Check Answer</button>
+    <button id="helpBtn">How to play</button>
+    <span id="piecesInfo"></span>
+  </div>
+
+  <canvas id="gameCanvas" width="640" height="640"></canvas>
+  <canvas id="piecesCanvas" width="640" height="120"></canvas>
+
+  <div id="helpModal" class="modal hidden">
+    <div class="modal-content">
+      <span id="helpClose" class="modal-close">&times;</span>
+      <h2>How to play</h2>
+
+      <h3>Objective</h3>
+      <p>
+        Your goal is to create a <b>single continuous path</b> from the <b>Start Room</b> to the <b>Goal Room</b>
+        by arranging rooms so that their <b>doors (yellow lines)</b> connect properly.
+      </p>
+
+      <h3>Tile Types</h3>
+      <ul>
+        <li><b>Green Room (S)</b>: Start room. Fixed in place and cannot be moved.</li>
+        <li><b>Red Room (G)</b>: Goal room. Fixed in place and cannot be moved.</li>
+        <li><b>Purple Room (H)</b>: Hidden room. A fixed hint tile. There's at least 2 rooms near hidden rooms.</li>
+        <li><b>Gray Rooms</b>: Fixed normal rooms.</li>
+        <li><b>Blue Rooms</b>: Movable puzzle pieces you must place on the board.</li>
+        <li><b>Empty Slots</b>: Black tiles where you can place rooms.</li>
+      </ul>
+
+      <h3>Placing Puzzle Pieces</h3>
+      <ul>
+        <li>Drag a room from the <b>piece list below</b> and drop it onto an empty slot on the board.</li>
+        <li>Rooms already placed on the board (blue rooms) can be <b>dragged and moved</b> freely.</li>
+        <li>Tiles with an <b>orange border</b> are fixed and <b>cannot be moved</b>.</li>
+        <li>Adjacent rooms must have <b>matching door directions</b> to form valid connections.</li>
+        <li>To complete the puzzle, <b>all movable pieces must be used</b>.</li>
+      </ul>
+
+      <h3>Checking the Solution</h3>
+      <ul>
+        <li>Click <b>Check Solution</b> to verify your board.</li>
+        <li>The puzzle is solved only if:</li>
+        <li>1) No pieces remain unused</li>
+        <li>2) All adjacent rooms have consistent door connections</li>
+        <li>3) There is a valid path from Start to Goal</li>
+      </ul>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
